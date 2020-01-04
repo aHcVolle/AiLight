@@ -430,144 +430,160 @@ void setupWeb() {
     request->send(response);
   });
 
-  if (!cfg.api) {
-    return;
-  }
+  if (cfg.api) {
 
-  // 'api/light' [GET] API Endpoint
-  server->on(HTTP_APIROUTE_LIGHT, HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!authorizeAPI(request)) {
-      return;
-    }
+    // 'api/light' [GET] API Endpoint
+    server->on(HTTP_APIROUTE_LIGHT, HTTP_GET,
+               [](AsyncWebServerRequest *request) {
+                 if (!authorizeAPI(request)) {
+                   return;
+                 }
 
-    // Send response
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject &root = jsonBuffer.createObject();
-    createStateJSON(root);
+                 // Send response
+                 DynamicJsonBuffer jsonBuffer;
+                 JsonObject &root = jsonBuffer.createObject();
+                 createStateJSON(root);
 
-    char buffer[root.measureLength() + 1];
-    root.printTo(buffer, sizeof(buffer));
+                 char buffer[root.measureLength() + 1];
+                 root.printTo(buffer, sizeof(buffer));
 
-    AsyncWebServerResponse *response =
-        request->beginResponse(200, HTTP_MIMETYPE_JSON, buffer);
-    response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
-    request->send(response);
-  });
+                 AsyncWebServerResponse *response =
+                     request->beginResponse(200, HTTP_MIMETYPE_JSON, buffer);
+                 response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
+                 request->send(response);
+               });
 
-  // 'api/light' [PATCH/PUT] API Endpoint
-  server->onRequestBody([](AsyncWebServerRequest *request, uint8_t *data,
-                           size_t len, size_t index, size_t total) {
-    if (request->url().equals(HTTP_APIROUTE_LIGHT)) {
-      if (!authorizeAPI(request)) {
-        return;
-      }
-
-      // Handle the 'api/light' PATCH request
-      if (request->method() == HTTP_PATCH) {
-        if (!processJson((char *)data)) {
-          send400Response(request, "Unable to process the JSON message");
+    // 'api/light' [PATCH/PUT] API Endpoint
+    server->onRequestBody([](AsyncWebServerRequest *request, uint8_t *data,
+                             size_t len, size_t index, size_t total) {
+      if (request->url().equals(HTTP_APIROUTE_LIGHT)) {
+        if (!authorizeAPI(request)) {
           return;
         }
 
-        sendState(); // Notify subscribers about the new state
+        // Handle the 'api/light' PATCH request
+        if (request->method() == HTTP_PATCH) {
+          if (!processJson((char *)data)) {
+            send400Response(request, "Unable to process the JSON message");
+            return;
+          }
 
-        // Send response
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject &root = jsonBuffer.createObject();
-        createStateJSON(root);
+          sendState(); // Notify subscribers about the new state
 
-        char buffer[root.measureLength() + 1];
-        root.printTo(buffer, sizeof(buffer));
+          // Send response
+          DynamicJsonBuffer jsonBuffer;
+          JsonObject &root = jsonBuffer.createObject();
+          createStateJSON(root);
 
-        AsyncWebServerResponse *response =
-            request->beginResponse(200, HTTP_MIMETYPE_JSON, buffer);
-        response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
-        request->send(response);
-      }
+          char buffer[root.measureLength() + 1];
+          root.printTo(buffer, sizeof(buffer));
 
-      // Handle the 'api/light' PUT request
-      if (request->method() == HTTP_PUT) {
-        StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
-        JsonObject &root = jsonBuffer.parseObject(data);
-
-        if (!root.success()) {
-          send400Response(request, "The given request structure is not valid");
-          return;
-        }
-
-        // Parse command request
-        if (!root.containsKey("command")) {
-          send400Response(request,
-                          "The given request does not contain a command");
-          return;
-        }
-
-        const char *command = root["command"];
-
-        // Execute restart command
-        if (os_strcmp(command, "restart") == 0) {
           AsyncWebServerResponse *response =
-              request->beginResponse(200, HTTP_MIMETYPE_JSON, "{}");
+              request->beginResponse(200, HTTP_MIMETYPE_JSON, buffer);
           response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
           request->send(response);
+        }
 
-          restartLight();
+        // Handle the 'api/light' PUT request
+        if (request->method() == HTTP_PUT) {
+          StaticJsonBuffer<BUFFER_SIZE> jsonBuffer;
+          JsonObject &root = jsonBuffer.parseObject(data);
+
+          if (!root.success()) {
+            send400Response(request,
+                            "The given request structure is not valid");
+            return;
+          }
+
+          // Parse command request
+          if (!root.containsKey("command")) {
+            send400Response(request,
+                            "The given request does not contain a command");
+            return;
+          }
+
+          const char *command = root["command"];
+
+          // Execute restart command
+          if (os_strcmp(command, "restart") == 0) {
+            AsyncWebServerResponse *response =
+                request->beginResponse(200, HTTP_MIMETYPE_JSON, "{}");
+            response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
+            request->send(response);
+
+            restartLight();
+          }
+
+          // Execute restart command
+          if (os_strcmp(command, "reset") == 0) {
+            AsyncWebServerResponse *response =
+                request->beginResponse(200, HTTP_MIMETYPE_JSON, "{}");
+            response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
+            request->send(response);
+
+            resetLight();
+          }
         }
       }
-    }
-  });
+    });
 
-  // 'api/about' API Endpoint
-  server->on(HTTP_APIROUTE_ABOUT, HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!authorizeAPI(request)) {
-      return;
-    }
+    // 'api/about' API Endpoint
+    server->on(HTTP_APIROUTE_ABOUT, HTTP_GET,
+               [](AsyncWebServerRequest *request) {
+                 if (!authorizeAPI(request)) {
+                   return;
+                 }
 
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject &root = jsonBuffer.createObject();
-    createAboutJSON(root);
+                 DynamicJsonBuffer jsonBuffer;
+                 JsonObject &root = jsonBuffer.createObject();
+                 createAboutJSON(root);
 
-    AsyncResponseStream *response =
-        request->beginResponseStream(HTTP_MIMETYPE_JSON);
-    response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
-    root.printTo(*response);
+                 AsyncResponseStream *response =
+                     request->beginResponseStream(HTTP_MIMETYPE_JSON);
+                 response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
+                 root.printTo(*response);
 
-    request->send(response);
-  });
+                 request->send(response);
+               });
 
-  // Handle unknown URI
-  // Also for 405 codes as the AsyncWebServer library returns a 4040 even for a
-  // request for which a particular method is not defined.
-  server->onNotFound([](AsyncWebServerRequest *request) {
-    AsyncWebServerResponse *response =
-        request->beginResponse(404, request->contentType());
+    // Handle unknown URI
+    // Also for 405 codes as the AsyncWebServer library returns a 4040 even
+    // for a request for which a particular method is not defined.
+    server->onNotFound([](AsyncWebServerRequest *request) {
+      AsyncWebServerResponse *response =
+          request->beginResponse(404, request->contentType());
 
-    // Send a 405 when 'api/light' is requested with a body and disallowed
-    // methods
-    if ((request->contentLength() > 0) &&
-        (request->method() != HTTP_PATCH || request->method() != HTTP_PUT)) {
-      response->setCode(405);
-      response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_LIGHT);
-    }
+      if (cfg.api) {
 
-    // Send a 405 when 'api/light' [GET] is requested with a disallowed method
-    if (request->url().equals(HTTP_APIROUTE_LIGHT) &&
-        request->method() != HTTP_GET) {
-      response->setCode(405);
-      response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_LIGHT);
-    }
+        // Send a 405 when 'api/light' is requested with disallowed methods
+        if (request->url().equals(HTTP_APIROUTE_LIGHT)) {
 
-    // Send a 405 when 'api/about' is requested with a disallowed method
-    if (request->url().equals(HTTP_APIROUTE_ABOUT) &&
-        request->method() != HTTP_GET) {
-      response->setCode(405);
-      response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_ABOUT);
-    }
+          // Request with content body (PATCH/PUT)
+          if ((request->contentLength() > 0) &&
+              (request->method() != HTTP_PATCH ||
+               request->method() != HTTP_PUT)) {
+            response->setCode(405);
+            response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_LIGHT);
+          }
 
-    response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
-    request->send(response);
-  });
+          if (request->method() != HTTP_GET) {
+            response->setCode(405);
+            response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_LIGHT);
+          }
+        }
 
+        // Send a 405 when 'api/about' is requested with a disallowed method
+        if (request->url().equals(HTTP_APIROUTE_ABOUT) &&
+            request->method() != HTTP_GET) {
+          response->setCode(405);
+          response->addHeader(HTTP_HEADER_ALLOW, HTTP_HEADER_ALLOW_ABOUT);
+        }
+      }
+
+      response->addHeader(HTTP_HEADER_SERVER, SERVER_SIGNATURE);
+      request->send(response);
+    });
+  }
   server->begin();
   DEBUGLOG("[HTTP] Server started\n");
 }

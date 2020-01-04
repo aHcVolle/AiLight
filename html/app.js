@@ -334,8 +334,6 @@ function wsConnect() {
 
     websock.onclose = function (e) {
         console.log('[WEBSOCKET] Connection closed');
-        console.log(e);
-        console.log(e.reason);
     };
 
     websock.onerror = function (e) {
@@ -366,6 +364,7 @@ function esConnect() {
         source.addEventListener('error', function (e) {
             if (e.target.readyState !== EventSource.OPEN) {
                 console.log('[EVENTSOURCE] Connection closed');
+                reload(false);
             }
         }, false);
 
