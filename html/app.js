@@ -369,8 +369,12 @@ function esConnect() {
             }
         }, false);
 
-        source.addEventListener('message', function (e) {
-            console.log("message", e.data);
+        // Handle command events
+        source.addEventListener('commands', function (e) {
+            const commands = ['restart', 'reset'];
+            if (commands.indexOf(e.data) >= 0) {
+                reload(true);
+            }
         }, false);
 
         // Handling OTA events

@@ -430,6 +430,31 @@ void loopLight() {
 }
 
 /**
+ * @brief Restarts the device (i.e. reboot)
+ *
+ * @return void
+ */
+void restartLight() {
+  DEBUGLOG("[LIGHT] Restarted\n");
+  events.send("restart", "commands");
+
+  ESP.restart();
+}
+
+/**
+ * @brief Resets the device (factory defaults are reloaded)
+ *
+ * @return void
+ */
+void resetLight() {
+  DEBUGLOG("[LIGHT] Reset\n");
+  events.send("reset", "commands");
+
+  loadFactoryDefaults();
+  ESP.restart();
+}
+
+/**
  * @brief Determines the step needed to change to the target value
  *
  * @param currentLevel the current level

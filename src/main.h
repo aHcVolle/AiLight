@@ -116,9 +116,6 @@ static const int BUFFER_SIZE = JSON_OBJECT_SIZE(10);
 #define HTTP_HEADER_APIKEY "API-Key"
 #define HTTP_HEADER_SERVER "Server"
 #define HTTP_HEADER_CONTENTTYPE "Content-Type"
-#define HTTP_HEADER_ALLOW "Allow"
-#define HTTP_MIMETYPE_HTML "text/html"
-#define HTTP_MIMETYPE_JSON "application/json"
 #define HTTP_HEADER_XSS_PROTECTION "X-XSS-Protection"
 #define HTTP_HEADER_XSS_PROTECTION_VALUE "1; mode=block"
 #define HTTP_HEADER_CONTENT_TYPE_OPTIONS "X-Content-Type-Options"
@@ -127,8 +124,11 @@ static const int BUFFER_SIZE = JSON_OBJECT_SIZE(10);
 #define HTTP_HEADER_FRAME_OPTIONS_VALUE "deny"
 #define HTTP_HEADER_CONTENT_ENCODING "Content-Encoding"
 #define HTTP_HEADER_CONTENT_ENCODING_VALUE "gzip"
-#define HTTP_HEADER_ALLOW_GET "GET"
-#define HTTP_HEADER_ALLOW_GET_PATCH "GET, PATCH"
+#define HTTP_HEADER_ALLOW "Allow"
+#define HTTP_HEADER_ALLOW_LIGHT "GET, PUT, PATCH"
+#define HTTP_HEADER_ALLOW_ABOUT "GET"
+#define HTTP_MIMETYPE_HTML "text/html"
+#define HTTP_MIMETYPE_JSON "application/json"
 
 const char *SERVER_SIGNATURE = APP_NAME "/" APP_VERSION;
 
